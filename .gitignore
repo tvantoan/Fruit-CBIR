@@ -1,4 +1,16 @@
 venv/
+.venv/
 preprocess.py
 deleteFile.py
 Fruits_data/
+
+# Backend
+backend/.env
+__pycache__/
+*.pyc
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep
+
+# Frontend
+node_modules/
+dist/
