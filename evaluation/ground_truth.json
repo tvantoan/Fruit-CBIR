@@ -1,0 +1,327 @@
+{
+  "version": "1.0",
+  "description": "Ground truth for Fruit-CBIR evaluation. Correct = same fruit category.",
+  "evaluation_metric": "category_match",
+  "total_queries": 29,
+  "queries": [
+    {
+      "query_image": "Apples_processed/Apple_263.png",
+      "fruit_label": "Apples",
+      "expected_top5": [
+        "Apples_processed/Apple_235.png",
+        "Apples_processed/Apple_373.png",
+        "Apples_processed/Apple_51.png",
+        "Apples_processed/Apple_646.png",
+        "Apples_processed/Apple_783.png"
+      ]
+    },
+    {
+      "query_image": "Apples_processed/Apple_427.png",
+      "fruit_label": "Apples",
+      "expected_top5": [
+        "Apples_processed/Apple_235.png",
+        "Apples_processed/Apple_372.png",
+        "Apples_processed/Apple_51.png",
+        "Apples_processed/Apple_646.png",
+        "Apples_processed/Apple_783.png"
+      ]
+    },
+    {
+      "query_image": "Apples_processed/Apple_591.png",
+      "fruit_label": "Apples",
+      "expected_top5": [
+        "Apples_processed/Apple_235.png",
+        "Apples_processed/Apple_372.png",
+        "Apples_processed/Apple_509.png",
+        "Apples_processed/Apple_646.png",
+        "Apples_processed/Apple_783.png"
+      ]
+    },
+    {
+      "query_image": "Apples_processed/Apple_755.png",
+      "fruit_label": "Apples",
+      "expected_top5": [
+        "Apples_processed/Apple_235.png",
+        "Apples_processed/Apple_372.png",
+        "Apples_processed/Apple_509.png",
+        "Apples_processed/Apple_645.png",
+        "Apples_processed/Apple_783.png"
+      ]
+    },
+    {
+      "query_image": "Bananas_processed/Banana_1251.png",
+      "fruit_label": "Bananas",
+      "expected_top5": [
+        "Bananas_processed/Banana_1209.png",
+        "Bananas_processed/Banana_154.png",
+        "Bananas_processed/Banana_365.png",
+        "Bananas_processed/Banana_577.png",
+        "Bananas_processed/Banana_788.png"
+      ]
+    },
+    {
+      "query_image": "Bananas_processed/Banana_238.png",
+      "fruit_label": "Bananas",
+      "expected_top5": [
+        "Bananas_processed/Banana_1209.png",
+        "Bananas_processed/Banana_153.png",
+        "Bananas_processed/Banana_365.png",
+        "Bananas_processed/Banana_577.png",
+        "Bananas_processed/Banana_788.png"
+      ]
+    },
+    {
+      "query_image": "Bananas_processed/Banana_491.png",
+      "fruit_label": "Bananas",
+      "expected_top5": [
+        "Bananas_processed/Banana_1209.png",
+        "Bananas_processed/Banana_153.png",
+        "Bananas_processed/Banana_364.png",
+        "Bananas_processed/Banana_577.png",
+        "Bananas_processed/Banana_788.png"
+      ]
+    },
+    {
+      "query_image": "Bananas_processed/Banana_745.png",
+      "fruit_label": "Bananas",
+      "expected_top5": [
+        "Bananas_processed/Banana_1209.png",
+        "Bananas_processed/Banana_153.png",
+        "Bananas_processed/Banana_364.png",
+        "Bananas_processed/Banana_576.png",
+        "Bananas_processed/Banana_788.png"
+      ]
+    },
+    {
+      "query_image": "Grapes_processed/Grape_1231.png",
+      "fruit_label": "Grapes",
+      "expected_top5": [
+        "Grapes_processed/Grape_1192.png",
+        "Grapes_processed/Grape_221.png",
+        "Grapes_processed/Grape_416.png",
+        "Grapes_processed/Grape_61.png",
+        "Grapes_processed/Grape_804.png"
+      ]
+    },
+    {
+      "query_image": "Grapes_processed/Grape_3.png",
+      "fruit_label": "Grapes",
+      "expected_top5": [
+        "Grapes_processed/Grape_1192.png",
+        "Grapes_processed/Grape_220.png",
+        "Grapes_processed/Grape_416.png",
+        "Grapes_processed/Grape_61.png",
+        "Grapes_processed/Grape_804.png"
+      ]
+    },
+    {
+      "query_image": "Grapes_processed/Grape_532.png",
+      "fruit_label": "Grapes",
+      "expected_top5": [
+        "Grapes_processed/Grape_1192.png",
+        "Grapes_processed/Grape_220.png",
+        "Grapes_processed/Grape_415.png",
+        "Grapes_processed/Grape_61.png",
+        "Grapes_processed/Grape_804.png"
+      ]
+    },
+    {
+      "query_image": "Grapes_processed/Grape_766.png",
+      "fruit_label": "Grapes",
+      "expected_top5": [
+        "Grapes_processed/Grape_1192.png",
+        "Grapes_processed/Grape_220.png",
+        "Grapes_processed/Grape_415.png",
+        "Grapes_processed/Grape_609.png",
+        "Grapes_processed/Grape_804.png"
+      ]
+    },
+    {
+      "query_image": "Mangoes_processed/Mango_1244.png",
+      "fruit_label": "Mangoes",
+      "expected_top5": [
+        "Mangoes_processed/Mango_1202.png",
+        "Mangoes_processed/Mango_178.png",
+        "Mangoes_processed/Mango_383.png",
+        "Mangoes_processed/Mango_589.png",
+        "Mangoes_processed/Mango_794.png"
+      ]
+    },
+    {
+      "query_image": "Mangoes_processed/Mango_26.png",
+      "fruit_label": "Mangoes",
+      "expected_top5": [
+        "Mangoes_processed/Mango_1202.png",
+        "Mangoes_processed/Mango_177.png",
+        "Mangoes_processed/Mango_383.png",
+        "Mangoes_processed/Mango_589.png",
+        "Mangoes_processed/Mango_794.png"
+      ]
+    },
+    {
+      "query_image": "Mangoes_processed/Mango_505.png",
+      "fruit_label": "Mangoes",
+      "expected_top5": [
+        "Mangoes_processed/Mango_1202.png",
+        "Mangoes_processed/Mango_177.png",
+        "Mangoes_processed/Mango_382.png",
+        "Mangoes_processed/Mango_589.png",
+        "Mangoes_processed/Mango_794.png"
+      ]
+    },
+    {
+      "query_image": "Mangoes_processed/Mango_752.png",
+      "fruit_label": "Mangoes",
+      "expected_top5": [
+        "Mangoes_processed/Mango_1202.png",
+        "Mangoes_processed/Mango_177.png",
+        "Mangoes_processed/Mango_382.png",
+        "Mangoes_processed/Mango_588.png",
+        "Mangoes_processed/Mango_794.png"
+      ]
+    },
+    {
+      "query_image": "Oranges_processed/Orange_1242.png",
+      "fruit_label": "Oranges",
+      "expected_top5": [
+        "Oranges_processed/Orange_1201.png",
+        "Oranges_processed/Orange_184.png",
+        "Oranges_processed/Orange_388.png",
+        "Oranges_processed/Orange_591.png",
+        "Oranges_processed/Orange_795.png"
+      ]
+    },
+    {
+      "query_image": "Oranges_processed/Orange_265.png",
+      "fruit_label": "Oranges",
+      "expected_top5": [
+        "Oranges_processed/Orange_1201.png",
+        "Oranges_processed/Orange_183.png",
+        "Oranges_processed/Orange_388.png",
+        "Oranges_processed/Orange_591.png",
+        "Oranges_processed/Orange_795.png"
+      ]
+    },
+    {
+      "query_image": "Oranges_processed/Orange_509.png",
+      "fruit_label": "Oranges",
+      "expected_top5": [
+        "Oranges_processed/Orange_1201.png",
+        "Oranges_processed/Orange_183.png",
+        "Oranges_processed/Orange_387.png",
+        "Oranges_processed/Orange_591.png",
+        "Oranges_processed/Orange_795.png"
+      ]
+    },
+    {
+      "query_image": "Oranges_processed/Orange_754.png",
+      "fruit_label": "Oranges",
+      "expected_top5": [
+        "Oranges_processed/Orange_1201.png",
+        "Oranges_processed/Orange_183.png",
+        "Oranges_processed/Orange_387.png",
+        "Oranges_processed/Orange_590.png",
+        "Oranges_processed/Orange_795.png"
+      ]
+    },
+    {
+      "query_image": "Peaches_processed/Peach_156.png",
+      "fruit_label": "Peaches",
+      "expected_top5": [
+        "Peaches_processed/Peach_137.png",
+        "Peaches_processed/Peach_175.png",
+        "Peaches_processed/Peach_211.png",
+        "Peaches_processed/Peach_249.png",
+        "Peaches_processed/Peach_61.png"
+      ]
+    },
+    {
+      "query_image": "Peaches_processed/Peach_211.png",
+      "fruit_label": "Peaches",
+      "expected_top5": [
+        "Peaches_processed/Peach_137.png",
+        "Peaches_processed/Peach_174.png",
+        "Peaches_processed/Peach_210.png",
+        "Peaches_processed/Peach_249.png",
+        "Peaches_processed/Peach_61.png"
+      ]
+    },
+    {
+      "query_image": "Peaches_processed/Peach_43.png",
+      "fruit_label": "Peaches",
+      "expected_top5": [
+        "Peaches_processed/Peach_137.png",
+        "Peaches_processed/Peach_174.png",
+        "Peaches_processed/Peach_210.png",
+        "Peaches_processed/Peach_248.png",
+        "Peaches_processed/Peach_61.png"
+      ]
+    },
+    {
+      "query_image": "Pomegranates_processed/Pomegranate_169.png",
+      "fruit_label": "Pomegranates",
+      "expected_top5": [
+        "Pomegranates_processed/Pomegranate_145.png",
+        "Pomegranates_processed/Pomegranate_193.png",
+        "Pomegranates_processed/Pomegranate_239.png",
+        "Pomegranates_processed/Pomegranate_286.png",
+        "Pomegranates_processed/Pomegranate_52.png"
+      ]
+    },
+    {
+      "query_image": "Pomegranates_processed/Pomegranate_239.png",
+      "fruit_label": "Pomegranates",
+      "expected_top5": [
+        "Pomegranates_processed/Pomegranate_145.png",
+        "Pomegranates_processed/Pomegranate_192.png",
+        "Pomegranates_processed/Pomegranate_238.png",
+        "Pomegranates_processed/Pomegranate_286.png",
+        "Pomegranates_processed/Pomegranate_52.png"
+      ]
+    },
+    {
+      "query_image": "Pomegranates_processed/Pomegranate_308.png",
+      "fruit_label": "Pomegranates",
+      "expected_top5": [
+        "Pomegranates_processed/Pomegranate_145.png",
+        "Pomegranates_processed/Pomegranate_192.png",
+        "Pomegranates_processed/Pomegranate_238.png",
+        "Pomegranates_processed/Pomegranate_285.png",
+        "Pomegranates_processed/Pomegranate_52.png"
+      ]
+    },
+    {
+      "query_image": "Strawberries_processed/Strawberry_155.png",
+      "fruit_label": "Strawberries",
+      "expected_top5": [
+        "Strawberries_processed/Strawberry_136.png",
+        "Strawberries_processed/Strawberry_174.png",
+        "Strawberries_processed/Strawberry_211.png",
+        "Strawberries_processed/Strawberry_249.png",
+        "Strawberries_processed/Strawberry_61.png"
+      ]
+    },
+    {
+      "query_image": "Strawberries_processed/Strawberry_210.png",
+      "fruit_label": "Strawberries",
+      "expected_top5": [
+        "Strawberries_processed/Strawberry_136.png",
+        "Strawberries_processed/Strawberry_173.png",
+        "Strawberries_processed/Strawberry_211.png",
+        "Strawberries_processed/Strawberry_249.png",
+        "Strawberries_processed/Strawberry_61.png"
+      ]
+    },
+    {
+      "query_image": "Strawberries_processed/Strawberry_42.png",
+      "fruit_label": "Strawberries",
+      "expected_top5": [
+        "Strawberries_processed/Strawberry_136.png",
+        "Strawberries_processed/Strawberry_173.png",
+        "Strawberries_processed/Strawberry_210.png",
+        "Strawberries_processed/Strawberry_248.png",
+        "Strawberries_processed/Strawberry_61.png"
+      ]
+    }
+  ]
+}

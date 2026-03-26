@@ -143,3 +143,32 @@ def get_random_images(n=5):
             return cur.fetchall()
     finally:
         conn.close()
+
+
+def insert_image_batch(conn, filename, filepath, fruit_label, width, height, file_size_kb):
+    """Insert image using an existing connection. Skips duplicates via ON CONFLICT."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO images (filename, filepath, fruit_label, width, height, file_size_kb)
+               VALUES (%s, %s, %s, %s, %s, %s)
+               ON CONFLICT (filename, fruit_label) DO NOTHING
+               RETURNING image_id""",
+            (filename, filepath, fruit_label, width, height, file_size_kb)
+        )
+        row = cur.fetchone()
+        return row['image_id'] if row else None
+
+
+def find_image_by_filename(filename, fruit_label):
+    """Lookup image_id by filename + fruit_label. Used by evaluation."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT image_id FROM images WHERE filename = %s AND fruit_label = %s",
+                (filename, fruit_label)
+            )
+            row = cur.fetchone()
+            return row['image_id'] if row else None
+    finally:
+        conn.close()

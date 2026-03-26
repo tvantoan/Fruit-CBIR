@@ -1,8 +1,10 @@
 import os
 import time
 import uuid
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, send_from_directory
 from PIL import Image
+
+DATASET_ROOT = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'Fruits_data_processed')
 
 from app.api import api_bp
 from app.api.search_interface import extract_features, search_similar
@@ -71,9 +73,9 @@ def search():
     results = search_similar(image_id, top_k=5)
     query_time_ms = round((time.time() - start_time) * 1000, 2)
 
-    # Add static path for frontend to display images
+    # Add URL for frontend to display images
     for r in results:
-        r['image_url'] = f"/static/{r['filepath']}"
+        r['image_url'] = f"/api/dataset/{r['filepath']}"
 
     # Log query
     result_ids = [r['image_id'] for r in results]
@@ -103,6 +105,12 @@ def get_image_detail(image_id):
     image_data['image_url'] = f"/static/{image_data['filepath']}"
 
     return jsonify(image_data)
+
+
+@api_bp.route('/dataset/<path:subpath>')
+def serve_dataset(subpath):
+    """Serve images from Fruits_data_processed/ directory."""
+    return send_from_directory(DATASET_ROOT, subpath)
 
 
 @api_bp.route('/stats', methods=['GET'])

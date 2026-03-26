@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS query_logs (
     query_date    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_images_unique ON images(filename, fruit_label);
 CREATE INDEX IF NOT EXISTS idx_images_label ON images(fruit_label);
 CREATE INDEX IF NOT EXISTS idx_features_type ON features(feature_type);
 CREATE INDEX IF NOT EXISTS idx_features_image ON features(image_id);
