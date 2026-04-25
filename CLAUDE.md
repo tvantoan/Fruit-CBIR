@@ -121,17 +121,17 @@ Fruit-CBIR/
 ### Search request body (multipart):
 - `image`: file (PNG/JPG)
 - `top_k`: int (default 5)
-- `weight_color`: float (default 0.20)
-- `weight_color_moments`: float (default 0.20)
-- `weight_texture`: float (default 0.10)
-- `weight_glcm`: float (default 0.50)
+- `weight_color`: float (default 0.10)
+- `weight_color_moments`: float (default 0.00)
+- `weight_texture`: float (default 0.20)
+- `weight_glcm`: float (default 0.70)
 - `weight_shape`: float (default 0.00)
 
 ## Feature Extraction (5 vectors, 286 dims total)
 
 | Type | Method | Dim | File |
 |------|--------|-----|------|
-| Color | HSV histogram (16×4×4), L2 norm, white/black bg mask | 256 | `_build_color_vector` |
+| Color | HSV histogram (16×4×4), **log1p compression** + L2 norm, white/black bg mask | 256 | `_build_color_vector` |
 | Color Moments | mean/std/skew of H,S,V (each scaled to [0,1]), L2 norm | 9 | `_build_color_moments_vector` |
 | Texture (LBP) | LBP uniform (P=8, R=1), L1 norm | 10 | `_build_texture_vector` |
 | GLCM | contrast/correlation/energy/homogeneity (3 angles avg), L2 norm | 4 | `_build_glcm_vector` |
@@ -149,27 +149,35 @@ features (feature_id PK, image_id FK,
           texture VECTOR(10), glcm VECTOR(4), shape VECTOR(7))
 ```
 
-## Evaluation Results (2026-04-25)
+## Evaluation Results (2026-04-26)
 
-After grid search (976 weight combinations, sum=1.0), optimal weights:
-- color: 0.20, color_moments: 0.20, texture: 0.10, **glcm: 0.50**, shape: 0.00
+After log-compressed Color HSV + grid search (1355 combinations, shape fixed=0),
+optimal weights:
+- color: 0.10, color_moments: 0.00, texture: 0.20, **glcm: 0.70**, shape: 0.00
 
 ```
-Mean P@5:      0.9241  (target ≥ 0.70)
-mAP:           0.9792
-Avg query time: 36 ms (direct mode), ~1600 ms via API (rembg)
+Mean P@5:      0.9655  (target ≥ 0.70)
+mAP:           0.9898
+Avg query time: 38 ms (direct), ~1600 ms via API (rembg)
 Total queries:  29
 ```
 
 Per-category P@5:
 - Apples / Bananas / Grapes / Mangoes / Oranges: **1.00** (perfect)
-- Strawberries: 0.87
-- Pomegranates: 0.73 (jumped from 0.47 after adding GLCM)
-- Peaches: 0.67 (smallest dataset, hardest)
+- Pomegranates: 0.93 (jumped from 0.47 → 0.73 → 0.93 across iterations)
+- Strawberries: 0.93 (was 0.87)
+- Peaches: 0.80 (was 0.67, smallest dataset)
 
-Key insight: GLCM (rough vs smooth surface) is the dominant signal for
-fruit retrieval. Hu Moments shape is uninformative because all samples
-are pre-cropped to similar centered shapes.
+Key insights from grid search:
+1. **GLCM dominates (0.70)** — rough vs smooth surface is the strongest signal.
+2. **Color Moments redundant (0.00)** once Color HSV uses log compression —
+   log1p suppresses dominant peaks, restoring distributional info that
+   Color Moments was previously compensating for.
+3. **Hu Moments shape useless (0.00)** — all images pre-cropped to similar
+   centered shapes.
+4. **Log-compressed Color HSV** fixes the Strawberry-vs-Pomegranate confusion:
+   Strawberry_155 went from 3/5 → 5/5 by using log(1+count) before L2 norm
+   (effectively cosine ≈ Hellinger distance).
 
 ## Useful Commands
 

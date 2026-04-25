@@ -35,27 +35,33 @@ class FeatureExtractor(IFeatureExtractor):
         }
 
     def _build_color_vector(self, image: np.ndarray) -> list[float]:
+        """
+        HSV histogram (16 H × 4 S × 4 V = 256 bins) with log compression.
+
+        log(1 + count) suppresses dominant peaks, so an image with a single
+        very saturated color zone is compared on its full distribution,
+        not just the peak. Cosine distance after L2 normalize then behaves
+        more like Hellinger / chi-square distance and discriminates
+        Strawberry vs Pomegranate correctly.
+        """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         _, mask_white = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
         _, mask_black = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY_INV)
-
         background_mask = cv2.bitwise_or(mask_white, mask_black)
         mask = cv2.bitwise_not(background_mask)
-
         kernel = np.ones((5, 5), np.uint8)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
         hist = cv2.calcHist([hsv], [0, 1, 2], mask, [16, 4, 4], [0, 180, 0, 256, 0, 256])
 
-        total_pixels = np.sum(hist)
-        if total_pixels > 0:
-            cv2.normalize(hist, hist, alpha=1.0, beta=0.0, norm_type=cv2.NORM_L2)
-            return hist.flatten().tolist()
-        else:
+        if np.sum(hist) <= 0:
             return [1.0 / 256] * 256
+
+        flat = np.log1p(hist.flatten().astype(np.float64))
+        norm = np.linalg.norm(flat) + 1e-10
+        return (flat / norm).tolist()
 
     def _build_texture_vector(self, image: np.ndarray) -> list[float]:
         """Sử dụng LBP để lấy đặc trưng vân bề mặt (vỏ quả, thớ vải...)."""

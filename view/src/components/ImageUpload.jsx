@@ -9,10 +9,10 @@ function ImageUpload({ onSearchSuccess }) {
   const [error, setError] = useState(null)
   const [topK, setTopK] = useState(5)
   const [weights, setWeights] = useState({
-    color: 0.20,
-    color_moments: 0.20,
-    texture: 0.10,
-    glcm: 0.50,
+    color: 0.10,
+    color_moments: 0.00,
+    texture: 0.20,
+    glcm: 0.70,
     shape: 0.00,
   })
 

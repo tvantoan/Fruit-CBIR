@@ -64,19 +64,19 @@ def main():
             query_features.append((q['fruit_label'], feats))
         print(f"  Extracted {len(query_features)} feature sets.\n")
 
-        # Define grid: weights sum to 1.0
-        # Search space: each weight in [0.0, 0.1, 0.2, ..., 1.0] but we only test combos summing to 1
-        steps = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        # Grid: shape fixed = 0 (verified useless from previous run).
+        # Sweep 4 weights summing to 1.0 with step 0.05 for finer resolution.
+        steps = [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
         results_log = []
 
         combos = []
+        s = 0.0  # shape fixed
         for c in steps:
             for cm in steps:
                 for t in steps:
-                    for g in steps:
-                        s = round(1.0 - c - cm - t - g, 2)
-                        if 0.0 <= s <= 0.8 and abs(c + cm + t + g + s - 1.0) < 0.01:
-                            combos.append((c, cm, t, g, s))
+                    g = round(1.0 - c - cm - t - s, 2)
+                    if 0.0 <= g <= 0.7 and abs(c + cm + t + g + s - 1.0) < 0.01:
+                        combos.append((c, cm, t, g, s))
 
         print(f"Searching {len(combos)} weight combinations...\n")
 
