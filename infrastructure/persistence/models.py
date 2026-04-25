@@ -22,5 +22,7 @@ class FeatureTable(db.Model):
     feature_id = db.Column(db.Integer, primary_key=True)
     image_id = db.Column(db.Integer, db.ForeignKey('images.image_id'))
     color = db.Column(Vector(256))
+    color_moments = db.Column(Vector(9))
     texture = db.Column(Vector(10))
+    glcm = db.Column(Vector(4))
     shape = db.Column(Vector(7))

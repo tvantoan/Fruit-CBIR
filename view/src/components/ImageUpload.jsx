@@ -8,7 +8,13 @@ function ImageUpload({ onSearchSuccess }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
   const [topK, setTopK] = useState(5)
-  const [weights, setWeights] = useState({ color: 0.7, texture: 0.2, shape: 0.1 })
+  const [weights, setWeights] = useState({
+    color: 0.40,
+    color_moments: 0.20,
+    texture: 0.15,
+    glcm: 0.15,
+    shape: 0.10,
+  })
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length === 0) return
@@ -87,43 +93,27 @@ function ImageUpload({ onSearchSuccess }) {
                 className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               />
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              <label className="text-xs text-gray-600">
-                Color
-                <input
-                  type="number"
-                  step="0.1"
-                  min={0}
-                  max={1}
-                  value={weights.color}
-                  onChange={(e) => setWeights((prev) => ({ ...prev, color: Number(e.target.value || 0) }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm"
-                />
-              </label>
-              <label className="text-xs text-gray-600">
-                Texture
-                <input
-                  type="number"
-                  step="0.1"
-                  min={0}
-                  max={1}
-                  value={weights.texture}
-                  onChange={(e) => setWeights((prev) => ({ ...prev, texture: Number(e.target.value || 0) }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm"
-                />
-              </label>
-              <label className="text-xs text-gray-600">
-                Shape
-                <input
-                  type="number"
-                  step="0.1"
-                  min={0}
-                  max={1}
-                  value={weights.shape}
-                  onChange={(e) => setWeights((prev) => ({ ...prev, shape: Number(e.target.value || 0) }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm"
-                />
-              </label>
+            <div className="grid grid-cols-5 gap-2 col-span-full">
+              {[
+                { key: 'color', label: 'Color' },
+                { key: 'color_moments', label: 'C.Moments' },
+                { key: 'texture', label: 'LBP' },
+                { key: 'glcm', label: 'GLCM' },
+                { key: 'shape', label: 'Shape' },
+              ].map(({ key, label }) => (
+                <label key={key} className="text-xs text-gray-600">
+                  {label}
+                  <input
+                    type="number"
+                    step="0.05"
+                    min={0}
+                    max={1}
+                    value={weights[key]}
+                    onChange={(e) => setWeights((prev) => ({ ...prev, [key]: Number(e.target.value || 0) }))}
+                    className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm"
+                  />
+                </label>
+              ))}
             </div>
           </div>
           <div className="flex gap-3 justify-center">

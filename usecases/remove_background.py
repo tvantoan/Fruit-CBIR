@@ -6,7 +6,7 @@ from PIL import Image
 from domain.usecase import IRemoveBackground
 
 class BackgroundRemover(IRemoveBackground):
-    def __init__(self, target_size: int = 256):
+    def __init__(self, target_size: int = 224):
         self.target_size = target_size
 
     def execute(self, image_data: np.ndarray) -> np.ndarray:

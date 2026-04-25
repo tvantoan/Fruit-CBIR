@@ -120,18 +120,21 @@ class ImageRepository(IImageRepository):
 class FeatureRepository(IFeatureRepository):
     """PostgreSQL implementation of FeatureRepository."""
 
-    def create(self, image_id: int, color:  list[float], texture:  list[float], shape:  list[float]) -> int:
-        """Store feature vector."""
+    def create(self, image_id: int,
+               color: list[float], color_moments: list[float],
+               texture: list[float], glcm: list[float],
+               shape: list[float]) -> int:
+        """Store feature vector with all 5 feature types."""
         conn = Database.get_connection()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute(
                     """
-                    INSERT INTO features (image_id, color, texture, shape)
-                    VALUES (%s, %s::vector, %s::vector, %s::vector)
+                    INSERT INTO features (image_id, color, color_moments, texture, glcm, shape)
+                    VALUES (%s, %s::vector, %s::vector, %s::vector, %s::vector, %s::vector)
                     RETURNING feature_id
                     """,
-                    (image_id, color, texture, shape)
+                    (image_id, color, color_moments, texture, glcm, shape)
                 )
                 feature_id = cur.fetchone()['feature_id']
             conn.commit()
@@ -149,7 +152,7 @@ class FeatureRepository(IFeatureRepository):
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute(
-                    "SELECT feature_id, image_id, color, texture, shape FROM features WHERE image_id = %s",
+                    "SELECT feature_id, image_id, color, color_moments, texture, glcm, shape FROM features WHERE image_id = %s",
                     (image_id,)
                 )
                 rows = cur.fetchone()
@@ -172,20 +175,24 @@ class FeatureRepository(IFeatureRepository):
             Database.return_connection(conn)
 
     def search_similar(self, features: dict, weights: dict[str, float]) -> list[dict]:
+        """Weighted cosine search across 5 feature vectors."""
         conn = Database.get_connection()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-
                 sql = """
                     SELECT
                         i.filename, i.filepath, fr.name AS fruit_name,
-                        (f.color <=> %(v_c)s::vector) AS dist_c,
-                        (f.texture <=> %(v_t)s::vector) AS dist_t,
-                        (f.shape <=> %(v_s)s::vector) AS dist_s,
+                        (f.color         <=> %(v_color)s::vector)   AS dist_color,
+                        (f.color_moments <=> %(v_moments)s::vector) AS dist_moments,
+                        (f.texture       <=> %(v_texture)s::vector) AS dist_texture,
+                        (f.glcm          <=> %(v_glcm)s::vector)    AS dist_glcm,
+                        (f.shape         <=> %(v_shape)s::vector)   AS dist_shape,
                         (
-                            %(w_c)s * (f.color <=> %(v_c)s::vector) +
-                            %(w_t)s * (f.texture <=> %(v_t)s::vector) +
-                            %(w_s)s * (f.shape <=> %(v_s)s::vector)
+                            %(w_color)s   * (f.color         <=> %(v_color)s::vector) +
+                            %(w_moments)s * (f.color_moments <=> %(v_moments)s::vector) +
+                            %(w_texture)s * (f.texture       <=> %(v_texture)s::vector) +
+                            %(w_glcm)s    * (f.glcm          <=> %(v_glcm)s::vector) +
+                            %(w_shape)s   * (f.shape         <=> %(v_shape)s::vector)
                         ) AS weighted_distance
                     FROM features f
                     JOIN images i ON f.image_id = i.image_id
@@ -195,27 +202,31 @@ class FeatureRepository(IFeatureRepository):
                 """
 
                 params = {
-                    'w_c': weights.get('color', 0.33),
-                    'v_c': features['color'],
-                    'w_t': weights.get('texture', 0.33),
-                    'v_v': features['texture'],
-                    'v_t': features['texture'],
-                    'w_s': weights.get('shape', 0.33),
-                    'v_s': features['shape'],
-                    'limit': LIMIT_SIMILAR_IMAGES
+                    'w_color':   weights.get('color', 0.40),
+                    'w_moments': weights.get('color_moments', 0.20),
+                    'w_texture': weights.get('texture', 0.15),
+                    'w_glcm':    weights.get('glcm', 0.15),
+                    'w_shape':   weights.get('shape', 0.10),
+                    'v_color':   features['color'],
+                    'v_moments': features['color_moments'],
+                    'v_texture': features['texture'],
+                    'v_glcm':    features['glcm'],
+                    'v_shape':   features['shape'],
+                    'limit':     LIMIT_SIMILAR_IMAGES
                 }
 
                 cur.execute(sql, params)
                 results = cur.fetchall()
 
-
                 for r in results:
                     r['distance'] = float(r['weighted_distance'])
                     r['similarity'] = round(1 - r['distance'], 4)
                     r['feature_distances'] = {
-                        'color': round(float(r['dist_c']) * params['w_c'], 4),
-                        'texture': round(float(r['dist_t']) * params['w_t'], 4),
-                        'shape': round(float(r['dist_s']) * params['w_s'], 4)
+                        'color':         round(float(r['dist_color'])   * params['w_color'], 4),
+                        'color_moments': round(float(r['dist_moments']) * params['w_moments'], 4),
+                        'texture':       round(float(r['dist_texture']) * params['w_texture'], 4),
+                        'glcm':          round(float(r['dist_glcm'])    * params['w_glcm'], 4),
+                        'shape':         round(float(r['dist_shape'])   * params['w_shape'], 4),
                     }
                 return results
         finally:
@@ -226,6 +237,8 @@ class FeatureRepository(IFeatureRepository):
             feature_id=row['feature_id'],
             image_id=row['image_id'],
             color=row['color'],
+            color_moments=row['color_moments'],
             texture=row['texture'],
+            glcm=row['glcm'],
             shape=row['shape'],
         )

@@ -27,5 +27,7 @@ class Feature:
     feature_id: int
     image_id: int
     color: list[float]
+    color_moments: list[float]
     texture: list[float]
+    glcm: list[float]
     shape: list[float]

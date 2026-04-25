@@ -21,11 +21,9 @@ class SeedData:
         args = parser.parse_args()
 
         if args.mode == 'clear':
-            print("Đang xóa toàn bộ dữ liệu trong bảng images và features...")
+            print("Đang xóa toàn bộ dữ liệu trong bảng images, features, fruits...")
             self.clear_all_data()
             print("Đã dọn dẹp sạch sẽ!")
-            self.seed_data()
-            print("Đã Seed lại dữ liệu thành công!")
 
         elif args.mode == 'reset':
             print("Bắt đầu reset: Xóa dữ liệu cũ và thực hiện Seed mới...")
@@ -93,12 +91,14 @@ class SeedData:
                             print(f"Lỗi: Không thể đọc ảnh tại {full_image_path}")
                             continue
                         cur.execute(
-                            """INSERT INTO features (image_id, color, texture, shape)
-                               VALUES (%s, %s::vector, %s::vector, %s::vector)""",
+                            """INSERT INTO features (image_id, color, color_moments, texture, glcm, shape)
+                               VALUES (%s, %s::vector, %s::vector, %s::vector, %s::vector, %s::vector)""",
                             (
                                 image_id,
                                 extracted_features['color'],
+                                extracted_features['color_moments'],
                                 extracted_features['texture'],
+                                extracted_features['glcm'],
                                 extracted_features['shape'],
                             )
                         )

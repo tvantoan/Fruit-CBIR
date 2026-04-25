@@ -25,17 +25,27 @@ function FeatureCharts({ results }) {
     labels: results.map((_, i) => `#${i + 1}`),
     datasets: [
       {
-        label: 'Color Distance',
+        label: 'Color (HSV)',
         data: results.map(r => r.feature_distances?.color ?? 0),
         backgroundColor: 'rgba(239, 68, 68, 0.7)',
       },
       {
-        label: 'Texture Distance',
+        label: 'Color Moments',
+        data: results.map(r => r.feature_distances?.color_moments ?? 0),
+        backgroundColor: 'rgba(249, 115, 22, 0.7)',
+      },
+      {
+        label: 'Texture (LBP)',
         data: results.map(r => r.feature_distances?.texture ?? 0),
         backgroundColor: 'rgba(59, 130, 246, 0.7)',
       },
       {
-        label: 'Shape Distance',
+        label: 'GLCM',
+        data: results.map(r => r.feature_distances?.glcm ?? 0),
+        backgroundColor: 'rgba(168, 85, 247, 0.7)',
+      },
+      {
+        label: 'Shape (Hu)',
         data: results.map(r => r.feature_distances?.shape ?? 0),
         backgroundColor: 'rgba(16, 185, 129, 0.7)',
       },

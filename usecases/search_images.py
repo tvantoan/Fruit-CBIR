@@ -16,15 +16,13 @@ class SearchImagesUseCase(ISearchImage):
     def execute(self, image_data: np.ndarray, weights: dict[str, float]) -> list[SearchResult]:
 
         extracted_features = self.feature_extractor.execute(image_data)
-        if not extracted_features or not extracted_features.get('color') or not extracted_features.get('texture') or not extracted_features.get('shape'):
+        required = ('color', 'color_moments', 'texture', 'glcm', 'shape')
+        if not extracted_features or any(not extracted_features.get(k) for k in required):
             return []
 
         similar_images = self.feature_repo.search_similar(
-           dict(
-                color=extracted_features['color'],
-                texture=extracted_features['texture'],
-                shape=extracted_features['shape']
-            ), weights
+            {k: extracted_features[k] for k in required},
+            weights,
         )
         results = []
         for row in similar_images:

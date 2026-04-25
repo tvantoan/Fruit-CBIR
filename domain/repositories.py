@@ -46,7 +46,9 @@ class IFeatureRepository(ABC):
 
     @abstractmethod
     def create(self, image_id: int,
-               color: list[float], texture:  list[float], shape:  list[float]) -> int:
+               color: list[float], color_moments: list[float],
+               texture: list[float], glcm: list[float],
+               shape: list[float]) -> int:
         """Store feature vector, return feature_id."""
         pass
 
