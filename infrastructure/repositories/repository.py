@@ -202,11 +202,11 @@ class FeatureRepository(IFeatureRepository):
                 """
 
                 params = {
-                    'w_color':   weights.get('color', 0.40),
+                    'w_color':   weights.get('color', 0.20),
                     'w_moments': weights.get('color_moments', 0.20),
-                    'w_texture': weights.get('texture', 0.15),
-                    'w_glcm':    weights.get('glcm', 0.15),
-                    'w_shape':   weights.get('shape', 0.10),
+                    'w_texture': weights.get('texture', 0.10),
+                    'w_glcm':    weights.get('glcm', 0.50),
+                    'w_shape':   weights.get('shape', 0.00),
                     'v_color':   features['color'],
                     'v_moments': features['color_moments'],
                     'v_texture': features['texture'],

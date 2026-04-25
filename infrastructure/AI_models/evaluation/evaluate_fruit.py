@@ -106,7 +106,13 @@ def _get_label(result):
 
 def run_evaluation(mode='direct', top_k=5, weights=None):
     if weights is None:
-        weights = {'color': 0.7, 'texture': 0.2, 'shape': 0.1}
+        weights = {
+            'color': 0.20,
+            'color_moments': 0.20,
+            'texture': 0.10,
+            'glcm': 0.50,
+            'shape': 0.00,
+        }
 
     gt = load_ground_truth()
     results_table = []

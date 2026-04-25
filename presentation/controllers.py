@@ -47,11 +47,11 @@ def search():
     top_k = request.form.get('top_k', default=5, type=int)
 
     weights = {
-        'color':         request.form.get('weight_color',         default=0.40, type=float),
+        'color':         request.form.get('weight_color',         default=0.20, type=float),
         'color_moments': request.form.get('weight_color_moments', default=0.20, type=float),
-        'texture':       request.form.get('weight_texture',       default=0.15, type=float),
-        'glcm':          request.form.get('weight_glcm',          default=0.15, type=float),
-        'shape':         request.form.get('weight_shape',         default=0.10, type=float),
+        'texture':       request.form.get('weight_texture',       default=0.10, type=float),
+        'glcm':          request.form.get('weight_glcm',          default=0.50, type=float),
+        'shape':         request.form.get('weight_shape',         default=0.00, type=float),
     }
 
     try:

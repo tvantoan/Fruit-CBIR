@@ -9,11 +9,11 @@ function ImageUpload({ onSearchSuccess }) {
   const [error, setError] = useState(null)
   const [topK, setTopK] = useState(5)
   const [weights, setWeights] = useState({
-    color: 0.40,
+    color: 0.20,
     color_moments: 0.20,
-    texture: 0.15,
-    glcm: 0.15,
-    shape: 0.10,
+    texture: 0.10,
+    glcm: 0.50,
+    shape: 0.00,
   })
 
   const onDrop = useCallback((acceptedFiles) => {
