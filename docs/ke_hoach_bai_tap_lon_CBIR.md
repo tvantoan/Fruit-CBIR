@@ -1,4 +1,4 @@
-# KẾ HOẠCH BÀI TẬP LỚN: HỆ CSDL LƯU TRỮ VÀ TÌM KIẾM ẢNH QUẢ
+\# KẾ HOẠCH BÀI TẬP LỚN: HỆ CSDL LƯU TRỮ VÀ TÌM KIẾM ẢNH QUẢ
 
 ## Nhóm: 3 thành viên
 
