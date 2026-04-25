@@ -1,8 +1,11 @@
 function getLabel(result) {
+  if (result?.fruit_name) return result.fruit_name
   if (result?.fruit_label) return result.fruit_label
-  const path = result?.filepath || ''
-  const firstPart = path.split('/')[0] || ''
-  return firstPart.replace('_processed', '') || 'Unknown'
+  const url = result?.image_url || result?.filepath || ''
+  const parts = url.split('/').filter(Boolean)
+  const idx = parts.findIndex((p) => p.endsWith('_processed'))
+  if (idx >= 0) return parts[idx].replace('_processed', '')
+  return 'Unknown'
 }
 
 function ResultGrid({ results }) {
@@ -16,7 +19,7 @@ function ResultGrid({ results }) {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {results.map((result, index) => (
           <div
-            key={result.image_id}
+            key={result.image_url ?? index}
             className={`bg-white rounded-xl shadow-sm border overflow-hidden transition-transform hover:scale-105
               ${index === 0 ? 'ring-2 ring-green-500' : 'border-gray-200'}`}
           >

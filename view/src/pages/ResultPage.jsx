@@ -39,10 +39,14 @@ function ResultPage() {
             />
             <div className="space-y-1 text-sm text-gray-600">
               <p><span className="font-medium">Top K:</span> {searchResponse.query_stats?.top_k ?? '-'}</p>
-              <p>
-                <span className="font-medium">Weights:</span>{' '}
-                C {searchResponse.query_stats?.weights_applied?.color ?? '-'} / T {searchResponse.query_stats?.weights_applied?.texture ?? '-'} / S {searchResponse.query_stats?.weights_applied?.shape ?? '-'}
-              </p>
+              <p className="font-medium">Weights:</p>
+              <ul className="grid grid-cols-2 gap-x-4 text-xs text-gray-500 ml-2">
+                <li>Color: {searchResponse.query_stats?.weights_applied?.color ?? '-'}</li>
+                <li>C.Moments: {searchResponse.query_stats?.weights_applied?.color_moments ?? '-'}</li>
+                <li>Texture (LBP): {searchResponse.query_stats?.weights_applied?.texture ?? '-'}</li>
+                <li>GLCM: {searchResponse.query_stats?.weights_applied?.glcm ?? '-'}</li>
+                <li>Shape: {searchResponse.query_stats?.weights_applied?.shape ?? '-'}</li>
+              </ul>
             </div>
           </div>
         </div>
