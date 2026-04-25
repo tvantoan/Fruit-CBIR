@@ -12,10 +12,13 @@ import { Bar } from 'react-chartjs-2'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 function getLabel(result) {
+  if (result?.fruit_name) return result.fruit_name
   if (result?.fruit_label) return result.fruit_label
-  const path = result?.filepath || ''
-  const firstPart = path.split('/')[0] || ''
-  return firstPart.replace('_processed', '') || 'Unknown'
+  const url = result?.image_url || result?.filepath || ''
+  const parts = url.split('/').filter(Boolean)
+  const idx = parts.findIndex((p) => p.endsWith('_processed'))
+  if (idx >= 0) return parts[idx].replace('_processed', '')
+  return 'Unknown'
 }
 
 function FeatureCharts({ results }) {
