@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { searchByUpload } from '../services/api'
 
-function ImageUpload({ onSearchSuccess }) {
+function ImageUpload({ onSearchSuccess, querySampleUrl }) {
   const [preview, setPreview] = useState(null)
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
@@ -23,6 +23,29 @@ function ImageUpload({ onSearchSuccess }) {
     setPreview(URL.createObjectURL(selected))
     setError(null)
   }, [])
+
+  // Load a sample image URL into the upload box (e.g. when user clicks a fruit card).
+  useEffect(() => {
+    if (!querySampleUrl) return
+    let cancelled = false
+    fetch(querySampleUrl)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.blob()
+      })
+      .then((blob) => {
+        if (cancelled) return
+        const filename = querySampleUrl.split('/').pop() || 'sample.png'
+        const f = new File([blob], filename, { type: blob.type || 'image/png' })
+        setFile(f)
+        setPreview(URL.createObjectURL(blob))
+        setError(null)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(`Couldn't load sample: ${err.message}`)
+      })
+    return () => { cancelled = true }
+  }, [querySampleUrl])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
