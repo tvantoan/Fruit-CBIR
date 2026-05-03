@@ -58,7 +58,7 @@ def search():
         start_time = time.time()
 
         img_bytes = np.frombuffer(file.read(), np.uint8)
-        image = cv2.imdecode(img_bytes, cv2.IMREAD_COLOR)
+        image = cv2.imdecode(img_bytes, cv2.IMREAD_UNCHANGED)
 
         if image is None:
             return jsonify({'error': 'Invalid image format'}), 400

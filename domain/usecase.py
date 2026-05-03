@@ -46,6 +46,6 @@ class IRemoveBackground(IUseCase[np.ndarray]):
     """Abstract background remover - defines interface for removing background from images."""
 
     @abstractmethod
-    def execute(self, image_data: np.ndarray) -> np.ndarray:
+    def execute(self, image_data: np.ndarray, target_size: int = 224) -> np.ndarray:
         """Remove background from image at given path and return processed image."""
         pass

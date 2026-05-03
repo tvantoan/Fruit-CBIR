@@ -7,6 +7,7 @@ from domain.usecase import IFeatureExtractor
 from skimage.feature import local_binary_pattern, graycomatrix, graycoprops
 import math
 
+
 class FeatureExtractor(IFeatureExtractor):
 
     def execute(self, image_data: np.ndarray) -> dict[str, list[float]]:
@@ -25,57 +26,57 @@ class FeatureExtractor(IFeatureExtractor):
         texture_vec = self._build_texture_vector(image_data)
         glcm_vec = self._build_glcm_vector(image_data)
         shape_vec = self._build_shape_vector(image_data)
+        aspect_ratio = self._get_aspect_ratio(image_data)
 
         return {
-            'color': color_vec,
-            'color_moments': color_moments_vec,
-            'texture': texture_vec,
-            'glcm': glcm_vec,
-            'shape': shape_vec,
+            "color": color_vec,
+            "color_moments": color_moments_vec,
+            "texture": texture_vec,
+            "glcm": glcm_vec,
+            "shape": shape_vec,
+            "aspect_ratio": [aspect_ratio],
         }
 
-    def _build_color_vector(self, image: np.ndarray) -> list[float]:
-        """
-        HSV histogram (16 H × 4 S × 4 V = 256 bins) with log compression.
-
-        log(1 + count) suppresses dominant peaks, so an image with a single
-        very saturated color zone is compared on its full distribution,
-        not just the peak. Cosine distance after L2 normalize then behaves
-        more like Hellinger / chi-square distance and discriminates
-        Strawberry vs Pomegranate correctly.
-        """
+    def _get_aspect_ratio(self, image: np.ndarray) -> float:
+        # get bounding box then calculate aspect ratio
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        contours, _ = cv2.findContours(
+            thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        if contours:
+            cnt = max(contours, key=cv2.contourArea)
+            _, _, w, h = cv2.boundingRect(cnt)
+            aspect_ratio = float(w) / h if h != 0 else 0
+            return aspect_ratio
+        return 0.0
 
-        _, mask_white = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
-        _, mask_black = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY_INV)
-        background_mask = cv2.bitwise_or(mask_white, mask_black)
-        mask = cv2.bitwise_not(background_mask)
-        kernel = np.ones((5, 5), np.uint8)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    def _build_color_vector(self, image: np.ndarray) -> list[float]:
+        bgr = image[:, :, :3]
+        mask = image[:, :, 3]
 
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        hist = cv2.calcHist([hsv], [0, 1, 2], mask, [16, 4, 4], [0, 180, 0, 256, 0, 256])
+        hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
 
-        if np.sum(hist) <= 0:
+        hist = cv2.calcHist(
+            [hsv], [0, 1, 2], mask, [16, 4, 4], [0, 180, 0, 256, 0, 256]
+        )
+        total_pixels = np.sum(hist)
+        if total_pixels > 0:
+            cv2.normalize(hist, hist, alpha=1.0, beta=0.0, norm_type=cv2.NORM_L2)
+            return hist.flatten().tolist()
+        else:
             return [1.0 / 256] * 256
-
-        flat = np.log1p(hist.flatten().astype(np.float64))
-        norm = np.linalg.norm(flat) + 1e-10
-        return (flat / norm).tolist()
 
     def _build_texture_vector(self, image: np.ndarray) -> list[float]:
         """Sử dụng LBP để lấy đặc trưng vân bề mặt (vỏ quả, thớ vải...)."""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-
         lbp = local_binary_pattern(gray, P=8, R=1, method="uniform")
 
-
-        (hist, _) = np.histogram(lbp.ravel(), bins=10, range=(0, 10))
-
+        hist, _ = np.histogram(lbp.ravel(), bins=10, range=(0, 10))
 
         hist = hist.astype("float")
-        hist /= (hist.sum() + 1e-7)
+        hist /= hist.sum() + 1e-7
         return hist.tolist()
 
     def _build_shape_vector(self, image: np.ndarray) -> list[float]:
@@ -107,7 +108,7 @@ class FeatureExtractor(IFeatureExtractor):
             mean = float(np.mean(channel))
             std = float(np.std(channel))
             centered = channel - mean
-            skew = float(np.cbrt(np.mean(centered ** 3)))
+            skew = float(np.cbrt(np.mean(centered**3)))
             moments.extend([mean, std, skew])
         # L2 normalize để tương thích với cosine distance
         arr = np.array(moments, dtype=np.float64)
@@ -123,13 +124,17 @@ class FeatureExtractor(IFeatureExtractor):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         gray = (gray // 4).astype(np.uint8)
         glcm = graycomatrix(
-            gray, distances=[1], angles=[0, np.pi / 4, np.pi / 2],
-            levels=64, symmetric=True, normed=True,
+            gray,
+            distances=[1],
+            angles=[0, np.pi / 4, np.pi / 2],
+            levels=64,
+            symmetric=True,
+            normed=True,
         )
-        contrast = float(graycoprops(glcm, 'contrast').mean()) / 100.0
-        correlation = float(graycoprops(glcm, 'correlation').mean())
-        energy = float(graycoprops(glcm, 'energy').mean())
-        homogeneity = float(graycoprops(glcm, 'homogeneity').mean())
+        contrast = float(graycoprops(glcm, "contrast").mean()) / 100.0
+        correlation = float(graycoprops(glcm, "correlation").mean())
+        energy = float(graycoprops(glcm, "energy").mean())
+        homogeneity = float(graycoprops(glcm, "homogeneity").mean())
         arr = np.array([contrast, correlation, energy, homogeneity], dtype=np.float64)
         norm = np.linalg.norm(arr) + 1e-10
         return (arr / norm).tolist()

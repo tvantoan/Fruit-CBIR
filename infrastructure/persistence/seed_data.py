@@ -83,7 +83,7 @@ class SeedData:
 
                         full_image_path = os.path.join(category_path, filename)
 
-                        image_ndarray = cv2.imread(full_image_path)
+                        image_ndarray = cv2.imread(full_image_path, cv2.IMREAD_UNCHANGED)
 
                         if image_ndarray is not None:
                             extracted_features = self.feature_extractor.execute(image_ndarray)
