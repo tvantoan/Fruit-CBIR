@@ -2,44 +2,59 @@ import os
 import traceback
 import cv2
 import argparse
-from psycopg2.extras import RealDictCursor
 from infrastructure.database.database import Database
 from domain.usecase import IFeatureExtractor
+from domain.constants import FEATURE_KEYS
+
 
 class SeedData:
     def __init__(self, feature_extractor: IFeatureExtractor):
         self.feature_extractor = feature_extractor
 
     def execute(self):
-        parser = argparse.ArgumentParser(description="Hãy chọn hành động:")
+        parser = argparse.ArgumentParser(description="Seed Data Configuration")
         parser.add_argument(
-        'mode',
-        choices=['clear', 'reset', 'skip'],
-        help="Chọn chế độ: clear (xóa sạch), reset (xóa & seed mới), skip (không làm gì)"
-    )
+            "mode",
+            choices=["clear", "reset", "skip"],
+            help="clear: xóa sạch, reset: xóa & seed mới, skip: bỏ qua",
+        )
+        parser.add_argument(
+            "--dataset-root",
+            type=str,
+            default=None,
+            help="Đường dẫn đến Fruits_data_train",
+        )
 
         args = parser.parse_args()
 
-        if args.mode == 'clear':
-            print("Đang xóa toàn bộ dữ liệu trong bảng images, features, fruits...")
-            self.clear_all_data()
-            print("Đã dọn dẹp sạch sẽ!")
+        # Xác định đường dẫn tuyệt đối đến thư mục train
+        if args.dataset_root:
+            self.dataset_root = args.dataset_root
+        else:
+            self.dataset_root = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "static", "Fruits_data_train"
+                )
+            )
 
-        elif args.mode == 'reset':
-            print("Bắt đầu reset: Xóa dữ liệu cũ và thực hiện Seed mới...")
+        if args.mode == "clear":
+            self.clear_all_data()
+            print("Successfully cleared all data.")
+        elif args.mode == "reset":
             self.clear_all_data()
             self.seed_data()
-            print("Đã Reset và Seed thành công!")
-
+            print("Reset and Seeding completed successfully!")
         else:
-            print("Bỏ qua công đoạn seed data. Khởi động App...")
-            pass
+            print("Skipping seeding process...")
 
     def clear_all_data(self):
         conn = Database.get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("TRUNCATE TABLE features, images, fruits RESTART IDENTITY CASCADE;")
+                print("Cleaning tables: fruits, images, features...")
+                cur.execute(
+                    "TRUNCATE TABLE features, images, fruits RESTART IDENTITY CASCADE;"
+                )
                 conn.commit()
         finally:
             Database.return_connection(conn)
@@ -47,64 +62,80 @@ class SeedData:
     def seed_data(self):
         conn = Database.get_connection()
         try:
+            if not os.path.exists(self.dataset_root):
+                print(f"Error: Dataset path not found at {self.dataset_root}")
+                return
 
             with conn.cursor() as cur:
-                base_dir = os.path.dirname(__file__)
-                dataset_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'static', 'Fruits_data_processed'))
+                categories = sorted(
+                    [
+                        d
+                        for d in os.listdir(self.dataset_root)
+                        if os.path.isdir(os.path.join(self.dataset_root, d))
+                    ]
+                )
 
-                if not os.path.exists(dataset_path):
-                    print(f"Error: Dataset path not found at {dataset_path}")
-                    return
+                for category_dir in categories:
+                    category_path = os.path.join(self.dataset_root, category_dir)
+                    fruit_name = category_dir.replace("_processed", "")
 
-                for category_dir in sorted(os.listdir(dataset_path)):
-                    category_path = os.path.join(dataset_path, category_dir)
-                    if not os.path.isdir(category_path):
-                        continue
-
-
-                    fruit_name = category_dir.replace('_processed', '')
-                    print(f"Seeding category: {fruit_name}...")
-
-                    cur.execute("INSERT INTO fruits (name) VALUES (%s) RETURNING fruit_id", (fruit_name,))
+                    # 1. Chèn vào bảng fruits
+                    cur.execute(
+                        "INSERT INTO fruits (name) VALUES (%s) RETURNING fruit_id",
+                        (fruit_name,),
+                    )
                     fruit_id = cur.fetchone()[0]
+                    print(f"--> Seeding {fruit_name} (ID: {fruit_id})")
 
+                    # Duyệt từng file ảnh trong thư mục loại quả
                     for filename in sorted(os.listdir(category_path)):
-                        if not filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        if not filename.lower().endswith((".png", ".jpg", ".jpeg")):
                             continue
 
+                        full_image_path = os.path.join(category_path, filename)
                         relative_path = os.path.join(category_dir, filename)
 
+                        # 2. Chèn vào bảng images
                         cur.execute(
                             "INSERT INTO images (filename, filepath, fruit_id) VALUES (%s, %s, %s) RETURNING image_id",
-                            (filename, relative_path, fruit_id)
+                            (filename, relative_path, fruit_id),
                         )
                         image_id = cur.fetchone()[0]
 
-
-                        full_image_path = os.path.join(category_path, filename)
-
-                        image_ndarray = cv2.imread(full_image_path, cv2.IMREAD_UNCHANGED)
-
-                        if image_ndarray is not None:
-                            extracted_features = self.feature_extractor.execute(image_ndarray)
-                        else:
-                            print(f"Lỗi: Không thể đọc ảnh tại {full_image_path}")
-                            continue
-                        cur.execute(
-                            """INSERT INTO features (image_id, color, color_moments, texture, glcm, shape)
-                               VALUES (%s, %s::vector, %s::vector, %s::vector, %s::vector, %s::vector)""",
-                            (
-                                image_id,
-                                extracted_features['color'],
-                                extracted_features['color_moments'],
-                                extracted_features['texture'],
-                                extracted_features['glcm'],
-                                extracted_features['shape'],
-                            )
+                        # 3. Trích xuất đặc trưng
+                        image_ndarray = cv2.imread(
+                            full_image_path, cv2.IMREAD_UNCHANGED
                         )
+                        if image_ndarray is None:
+                            print(f"Skip: Could not read {filename}")
+                            continue
 
-            conn.commit()
-            print("Seeding completed successfully!")
+                        extracted = self.feature_extractor.execute(image_ndarray)
+
+                        # 4. Chuẩn bị SQL động cho bảng features
+                        # Tách riêng các trường là vector và các trường là số thực (float)
+                        placeholders = []
+                        for key in FEATURE_KEYS:
+                            # Nếu là aspect_ratio thì không dùng casting ::vector (vì nó là float)
+                            if key == "aspect_ratio":
+                                placeholders.append("%s")
+                            else:
+                                placeholders.append("%s::vector")
+
+                        sql = f"""
+                            INSERT INTO features (image_id, {', '.join(FEATURE_KEYS)})
+                            VALUES (%s, {', '.join(placeholders)})
+                        """
+
+                        values = [image_id] + [
+                            extracted.get(key) for key in FEATURE_KEYS
+                        ]
+                        cur.execute(sql, tuple(values))
+
+                    conn.commit()  # Commit sau mỗi thư mục để tránh treo transaction quá lâu
+                    print(f"Finished seeding {fruit_name}")
+
+            print("Done! All training data seeded.")
 
         except Exception as e:
             conn.rollback()

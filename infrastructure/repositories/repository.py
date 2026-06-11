@@ -7,21 +7,27 @@ from pgvector import Vector
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from domain.constants import LIMIT_SAMPLE_IMAGES_PER_FRUIT, LIMIT_SIMILAR_IMAGES
+from domain.constants import (
+    FEATURE_KEYS,
+    LIMIT_SAMPLE_IMAGES_PER_FRUIT,
+    LIMIT_SIMILAR_IMAGES,
+)
 from domain.models import Feature, Image, Fruit
 from domain.repositories import IFeatureRepository, IImageRepository, IFruitRepository
 from infrastructure.database.database import Database
+from infrastructure.helper import normalize_weights
+
 
 class FruitRepository(IFruitRepository):
     """PostgreSQL implementation of FruitRepository."""
+
     def create(self, name: str) -> int:
         """Create and persist fruit, return fruit_id."""
         conn = Database.get_connection()
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "INSERT INTO fruits (name) VALUES (%s) RETURNING fruit_id",
-                    (name,)
+                    "INSERT INTO fruits (name) VALUES (%s) RETURNING fruit_id", (name,)
                 )
                 fruit_id = cur.fetchone()[0]
             conn.commit()
@@ -32,6 +38,7 @@ class FruitRepository(IFruitRepository):
             raise e
         finally:
             Database.return_connection(conn)
+
     def get_id_by_name(self, name: str) -> int:
         """Get fruit_id by name."""
         conn = Database.get_connection()
@@ -57,6 +64,7 @@ class FruitRepository(IFruitRepository):
         """Chuyển đổi Dict từ DB sang Dataclass Fruit."""
         return Fruit(**row)
 
+
 class ImageRepository(IImageRepository):
     """PostgreSQL implementation of ImageRepository."""
 
@@ -68,13 +76,13 @@ class ImageRepository(IImageRepository):
                 cur.execute(
                     """INSERT INTO images (filename, filepath, fruit_id)
                        VALUES (%s, %s, %s) RETURNING image_id""",
-                    (filename, filepath, fruit_id)
+                    (filename, filepath, fruit_id),
                 )
                 row = cur.fetchone()
-                if not row or 'image_id' not in row:
-                    raise RuntimeError('Failed to insert image')
+                if not row or "image_id" not in row:
+                    raise RuntimeError("Failed to insert image")
 
-                image_id = row['image_id']
+                image_id = row["image_id"]
             conn.commit()
             return image_id
 
@@ -105,7 +113,7 @@ class ImageRepository(IImageRepository):
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute(
                     "SELECT * FROM images WHERE fruit_id = %s LIMIT %s",
-                    (fruit_id, LIMIT_SAMPLE_IMAGES_PER_FRUIT)
+                    (fruit_id, LIMIT_SAMPLE_IMAGES_PER_FRUIT),
                 )
                 row = cur.fetchone()
                 if row is None:
@@ -113,30 +121,37 @@ class ImageRepository(IImageRepository):
                 return self._row_to_image(row)
         finally:
             Database.return_connection(conn)
+
     def _row_to_image(self, row: dict) -> Image:
         """Chuyển đổi Dict từ DB sang Dataclass Image."""
         return Image(**row)
 
+
 class FeatureRepository(IFeatureRepository):
     """PostgreSQL implementation of FeatureRepository."""
 
-    def create(self, image_id: int,
-               color: list[float], color_moments: list[float],
-               texture: list[float], glcm: list[float],
-               shape: list[float]) -> int:
-        """Store feature vector with all 5 feature types."""
+    def create(self, image_id: int, features: dict[str, list[float]]) -> int:
+        """Store feature vectors for all FEATURE_KEYS."""
+        missing_keys = [key for key in FEATURE_KEYS if key not in features]
+        if missing_keys:
+            raise ValueError(f"Missing required feature keys: {missing_keys}")
+
         conn = Database.get_connection()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                feature_columns = ", ".join(FEATURE_KEYS)
+                placeholders = ", ".join(["%s::vector" for _ in FEATURE_KEYS])
+                values = [image_id] + [features[key] for key in FEATURE_KEYS]
+
                 cur.execute(
-                    """
-                    INSERT INTO features (image_id, color, color_moments, texture, glcm, shape)
-                    VALUES (%s, %s::vector, %s::vector, %s::vector, %s::vector, %s::vector)
+                    f"""
+                    INSERT INTO features (image_id, {feature_columns})
+                    VALUES (%s, {placeholders})
                     RETURNING feature_id
                     """,
-                    (image_id, color, color_moments, texture, glcm, shape)
+                    tuple(values),
                 )
-                feature_id = cur.fetchone()['feature_id']
+                feature_id = cur.fetchone()["feature_id"]
             conn.commit()
             return feature_id
         except Exception as e:
@@ -151,9 +166,10 @@ class FeatureRepository(IFeatureRepository):
         conn = Database.get_connection()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                selected_columns = ", ".join(["feature_id", "image_id"] + FEATURE_KEYS)
                 cur.execute(
-                    "SELECT feature_id, image_id, color, color_moments, texture, glcm, shape FROM features WHERE image_id = %s",
-                    (image_id,)
+                    f"SELECT {selected_columns} FROM features WHERE image_id = %s",
+                    (image_id,),
                 )
                 rows = cur.fetchone()
                 return self._row_to_feature(rows) if rows else None
@@ -174,25 +190,35 @@ class FeatureRepository(IFeatureRepository):
         finally:
             Database.return_connection(conn)
 
-    def search_similar(self, features: dict, weights: dict[str, float]) -> list[dict]:
-        """Weighted cosine search across 5 feature vectors."""
+    def search_similar(
+        self,
+        features: dict,
+        weights: dict[str, float],
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Weighted cosine search across feature vectors with normalized weights."""
         conn = Database.get_connection()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                sql = """
+                normalized_weights = normalize_weights(weights)
+
+                # SỬA TẠI ĐÂY: Dùng {{ }} để thoát dấu ngoặc nhọn trong f-string
+                # Hoặc dùng định dạng %s truyền thống của psycopg2
+                dist_selects = [
+                    f"COALESCE(f.{key} <=> %(v_{key})s::vector, 1.0) AS dist_{key}"
+                    for key in FEATURE_KEYS
+                ]
+                weighted_terms = [
+                    f"%(w_{key})s * COALESCE(f.{key} <=> %(v_{key})s::vector, 1.0)"
+                    for key in FEATURE_KEYS
+                ]
+
+                sql = f"""
                     SELECT
                         i.filename, i.filepath, fr.name AS fruit_name,
-                        (f.color         <=> %(v_color)s::vector)   AS dist_color,
-                        (f.color_moments <=> %(v_moments)s::vector) AS dist_moments,
-                        (f.texture       <=> %(v_texture)s::vector) AS dist_texture,
-                        (f.glcm          <=> %(v_glcm)s::vector)    AS dist_glcm,
-                        (f.shape         <=> %(v_shape)s::vector)   AS dist_shape,
+                        {',\n                    '.join(dist_selects)},
                         (
-                            %(w_color)s   * (f.color         <=> %(v_color)s::vector) +
-                            %(w_moments)s * (f.color_moments <=> %(v_moments)s::vector) +
-                            %(w_texture)s * (f.texture       <=> %(v_texture)s::vector) +
-                            %(w_glcm)s    * (f.glcm          <=> %(v_glcm)s::vector) +
-                            %(w_shape)s   * (f.shape         <=> %(v_shape)s::vector)
+                            { ' + '.join(weighted_terms) }
                         ) AS weighted_distance
                     FROM features f
                     JOIN images i ON f.image_id = i.image_id
@@ -201,44 +227,48 @@ class FeatureRepository(IFeatureRepository):
                     LIMIT %(limit)s;
                 """
 
-                params = {
-                    'w_color':   weights.get('color', 0.10),
-                    'w_moments': weights.get('color_moments', 0.00),
-                    'w_texture': weights.get('texture', 0.20),
-                    'w_glcm':    weights.get('glcm', 0.70),
-                    'w_shape':   weights.get('shape', 0.00),
-                    'v_color':   features['color'],
-                    'v_moments': features['color_moments'],
-                    'v_texture': features['texture'],
-                    'v_glcm':    features['glcm'],
-                    'v_shape':   features['shape'],
-                    'limit':     LIMIT_SIMILAR_IMAGES
-                }
+                # Xây dựng params khớp chính xác với key trong SQL
+                params = {}
+                for key in FEATURE_KEYS:
+                    params[f"w_{key}"] = normalized_weights.get(key, 0)
+                    params[f"v_{key}"] = features.get(key, [])  # Dùng .get để an toàn
+
+                params["limit"] = limit if limit is not None else LIMIT_SIMILAR_IMAGES
 
                 cur.execute(sql, params)
                 results = cur.fetchall()
 
                 for r in results:
-                    r['distance'] = float(r['weighted_distance'])
-                    r['similarity'] = round(1 - r['distance'], 4)
-                    r['feature_distances'] = {
-                        'color':         round(float(r['dist_color'])   * params['w_color'], 4),
-                        'color_moments': round(float(r['dist_moments']) * params['w_moments'], 4),
-                        'texture':       round(float(r['dist_texture']) * params['w_texture'], 4),
-                        'glcm':          round(float(r['dist_glcm'])    * params['w_glcm'], 4),
-                        'shape':         round(float(r['dist_shape'])   * params['w_shape'], 4),
+                    r["distance"] = float(r["weighted_distance"])
+                    r["similarity"] = round(1 - r["distance"], 4)
+                    r["feature_distances"] = {
+                        key: round(
+                            float(r[f"dist_{key}"]) * normalized_weights.get(key, 0), 4
+                        )
+                        for key in FEATURE_KEYS
                     }
                 return results
         finally:
             Database.return_connection(conn)
 
+    def count_per_fruit(self) -> dict[str, int]:
+        """Return number of indexed images per fruit name."""
+        conn = Database.get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT fr.name, COUNT(f.feature_id) AS cnt
+                    FROM features f
+                    JOIN images i ON f.image_id = i.image_id
+                    JOIN fruits fr ON i.fruit_id = fr.fruit_id
+                    GROUP BY fr.name
+                    """
+                )
+                return {name: int(cnt) for name, cnt in cur.fetchall()}
+        finally:
+            Database.return_connection(conn)
+
     def _row_to_feature(self, row: dict):
-        return Feature(
-            feature_id=row['feature_id'],
-            image_id=row['image_id'],
-            color=row['color'],
-            color_moments=row['color_moments'],
-            texture=row['texture'],
-            glcm=row['glcm'],
-            shape=row['shape'],
-        )
+        # Lọc lấy những dữ liệu có trong row mà Feature cần
+        return Feature(**{k: row[k] for k in Feature.__annotations__.keys()})

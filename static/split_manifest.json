@@ -1,0 +1,47 @@
+{
+  "source": "/home/kiiri/projects/fruit/static/Fruits_data_processed",
+  "train": "/home/kiiri/projects/fruit/static/Fruits_data_train",
+  "test": "/home/kiiri/projects/fruit/static/Fruits_data_test",
+  "categories": {
+    "Apples_processed": {
+      "total": 911,
+      "train": 728,
+      "test": 183
+    },
+    "Bananas_processed": {
+      "total": 1408,
+      "train": 1126,
+      "test": 282
+    },
+    "Grapes_processed": {
+      "total": 1295,
+      "train": 1036,
+      "test": 259
+    },
+    "Mangoes_processed": {
+      "total": 1368,
+      "train": 1094,
+      "test": 274
+    },
+    "Oranges_processed": {
+      "total": 1358,
+      "train": 1086,
+      "test": 272
+    },
+    "Peaches_processed": {
+      "total": 248,
+      "train": 198,
+      "test": 50
+    },
+    "Pomegranates_processed": {
+      "total": 310,
+      "train": 248,
+      "test": 62
+    },
+    "Strawberries_processed": {
+      "total": 249,
+      "train": 199,
+      "test": 50
+    }
+  }
+}

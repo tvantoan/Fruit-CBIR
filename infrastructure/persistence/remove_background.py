@@ -45,7 +45,7 @@ def preprocess_image_for_rembg(image: np.ndarray, target_size: int = 224) -> np.
 
 if __name__ == "__main__":
     fruits = [
-        "Pomegranates",
+        "Strawberries",
     ]
     for fruit in fruits:
         input_path = f"/home/kiiri/projects/fruit/static/Fruits_data/{fruit}"

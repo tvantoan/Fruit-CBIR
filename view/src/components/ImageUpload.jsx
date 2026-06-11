@@ -7,14 +7,6 @@ function ImageUpload({ onSearchSuccess, querySampleUrl }) {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
-  const [topK, setTopK] = useState(5)
-  const [weights, setWeights] = useState({
-    color: 0.10,
-    color_moments: 0.00,
-    texture: 0.20,
-    glcm: 0.70,
-    shape: 0.00,
-  })
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length === 0) return
@@ -59,7 +51,7 @@ function ImageUpload({ onSearchSuccess, querySampleUrl }) {
     setUploading(true)
     setError(null)
     try {
-      const data = await searchByUpload({ file, topK, weights })
+      const data = await searchByUpload({ file })
       onSearchSuccess({ searchResponse: data, queryPreview: preview })
     } catch (err) {
       setError(err.response?.data?.error || 'Search failed. Is the backend running?')
@@ -104,41 +96,10 @@ function ImageUpload({ onSearchSuccess, querySampleUrl }) {
 
       {file && (
         <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="text-sm text-gray-600">
-              Top K
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={topK}
-                onChange={(e) => setTopK(Number(e.target.value || 5))}
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-              />
+              Search top 5 similar fruits based on your uploaded image.
             </label>
-            <div className="grid grid-cols-5 gap-2 col-span-full">
-              {[
-                { key: 'color', label: 'Color' },
-                { key: 'color_moments', label: 'C.Moments' },
-                { key: 'texture', label: 'LBP' },
-                { key: 'glcm', label: 'GLCM' },
-                { key: 'shape', label: 'Shape' },
-              ].map(({ key, label }) => (
-                <label key={key} className="text-xs text-gray-600">
-                  {label}
-                  <input
-                    type="number"
-                    step="0.05"
-                    min={0}
-                    max={1}
-                    value={weights[key]}
-                    onChange={(e) => setWeights((prev) => ({ ...prev, [key]: Number(e.target.value || 0) }))}
-                    className="mt-1 w-full rounded-md border border-gray-300 px-2 py-2 text-sm"
-                  />
-                </label>
-              ))}
-            </div>
-          </div>
+
           <div className="flex gap-3 justify-center">
           <button
             onClick={handleSearch}

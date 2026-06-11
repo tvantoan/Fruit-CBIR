@@ -4,23 +4,10 @@ const api = axios.create({
   baseURL: '/api',
 })
 
-const DEFAULT_WEIGHTS = {
-  color: 0.10,
-  color_moments: 0.00,
-  texture: 0.20,
-  glcm: 0.70,
-  shape: 0.00,
-}
 
-export async function searchByUpload({ file, topK = 5, weights = DEFAULT_WEIGHTS }) {
+export async function searchByUpload({ file, topK = 5 }) {
   const formData = new FormData()
   formData.append('image', file)
-  formData.append('top_k', String(topK))
-  formData.append('weight_color', String(weights.color))
-  formData.append('weight_color_moments', String(weights.color_moments))
-  formData.append('weight_texture', String(weights.texture))
-  formData.append('weight_glcm', String(weights.glcm))
-  formData.append('weight_shape', String(weights.shape))
 
   const res = await api.post('/search', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -30,5 +17,27 @@ export async function searchByUpload({ file, topK = 5, weights = DEFAULT_WEIGHTS
 
 export async function getFruits() {
   const res = await api.get('/fruits')
+  return res.data
+}
+
+export async function getOptimizationStatus() {
+  const res = await api.get('/admin/optimize')
+  return res.data
+}
+
+export async function startOptimization({ nTrials = 100 } = {}) {
+  const res = await api.post('/admin/optimize', { n_trials: nTrials })
+  return res.data
+}
+
+export async function evaluateFeatures({ subsetSize = 100 } = {}) {
+  const res = await api.get('/admin/evaluate-features', { params: { subset_size: subsetSize } })
+  return res.data
+}
+
+export async function evaluateTestDataset({ sampleSize = 50, topK = 5 } = {}) {
+  const res = await api.get('/admin/test-evaluation', {
+    params: { sample_size: sampleSize, top_k: topK },
+  })
   return res.data
 }

@@ -1,7 +1,8 @@
-from domain.constants import SERVED_IMAGE_API
+from domain.constants import FEATURE_KEYS, SERVED_IMAGE_API
 from domain.repositories import IFeatureRepository, IImageRepository, IFruitRepository
 from domain.usecase import IFeatureExtractor, ISearchImage, IRemoveBackground
 from domain.dtos import SearchResult
+from infrastructure.helper import get_weights
 import numpy as np
 
 
@@ -21,11 +22,13 @@ class SearchImagesUseCase(ISearchImage):
         self.background_remover = background_remover
 
     def execute(
-        self, image_data: np.ndarray, weights: dict[str, float]
+        self, image_data: np.ndarray, weights: dict[str, float] | None = None
     ) -> list[SearchResult]:
-
+        if weights is None:
+            weights = get_weights()
+        print("Weights used for search:", weights)
         extracted_features = self.feature_extractor.execute(image_data)
-        required = ("color", "color_moments", "texture", "glcm", "shape")
+        required = FEATURE_KEYS
         if not extracted_features or any(
             not extracted_features.get(k) for k in required
         ):

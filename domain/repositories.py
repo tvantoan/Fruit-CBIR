@@ -2,9 +2,8 @@
 
 from abc import ABC, abstractmethod
 
-from pgvector import Vector
-
 from domain.models import Image, Feature, Fruit
+
 
 class IFruitRepository(ABC):
     """Abstract repository for fruit persistence."""
@@ -18,10 +17,12 @@ class IFruitRepository(ABC):
     def get_id_by_name(self, name: str) -> int:
         """Get fruit_id by name."""
         pass
+
     @abstractmethod
     def get_all(self) -> list[Fruit]:
         """Get all fruits."""
         pass
+
 
 class IImageRepository(ABC):
     """Abstract repository for image persistence."""
@@ -41,15 +42,13 @@ class IImageRepository(ABC):
         """Get sample images for a fruit."""
         pass
 
+
 class IFeatureRepository(ABC):
     """Abstract repository for feature persistence."""
 
     @abstractmethod
-    def create(self, image_id: int,
-               color: list[float], color_moments: list[float],
-               texture: list[float], glcm: list[float],
-               shape: list[float]) -> int:
-        """Store feature vector, return feature_id."""
+    def create(self, image_id: int, features: dict[str, list[float]]) -> int:
+        """Store feature vectors, return feature_id."""
         pass
 
     @abstractmethod
@@ -63,6 +62,13 @@ class IFeatureRepository(ABC):
         pass
 
     @abstractmethod
-    def search_similar(self, features: dict, weights: dict[str, float]) -> list[dict]:
+    def search_similar(
+        self, features: dict, weights: dict[str, float], limit: int | None = None
+    ) -> list[dict]:
         """Search for similar images based on query vector, return list of dicts with image info and similarity."""
+        pass
+
+    @abstractmethod
+    def count_per_fruit(self) -> dict[str, int]:
+        """Return number of indexed images per fruit name."""
         pass
